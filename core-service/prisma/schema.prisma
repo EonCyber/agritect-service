@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TaxIdType {
+  PF
+  PJ
+}
+
+enum CommandExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model RuralProducer {
+  id         String     @id @default(cuid())
+  taxId      String     @unique
+  taxIdType  TaxIdType
+  name       String
+  farms      Farm[]
+}
+
+model Farm {
+  id                    String        @id @default(cuid())
+  ruralProducerId       String
+  name                  String
+  city                  String
+  state                 String
+  totalAreaHectares     Float
+  arableAreaHectares    Float
+  vegetationAreaHectares Float
+  ruralProducer         RuralProducer @relation(fields: [ruralProducerId], references: [id])
+  plantings             Planting[]
+
+  @@index([ruralProducerId])
+}
+
+model HarvestSeason {
+  id       String     @id @default(cuid())
+  year     Int        @unique
+  plantings Planting[]
+}
+
+model Crop {
+  id       String     @id @default(cuid())
+  name     String     @unique
+  plantings Planting[]
+}
+
+model Planting {
+  id              String        @id @default(cuid())
+  farmId          String
+  cropId          String
+  harvestSeasonId String
+  farm            Farm          @relation(fields: [farmId], references: [id])
+  crop            Crop          @relation(fields: [cropId], references: [id])
+  harvestSeason   HarvestSeason @relation(fields: [harvestSeasonId], references: [id])
+
+  @@unique([farmId, cropId, harvestSeasonId])
+  @@index([farmId, harvestSeasonId])
+  @@index([cropId, harvestSeasonId])
+}
+
+model CommandExecution {
+  id            String                 @id @default(cuid())
+  commandName   String
+  correlationId String?
+  status        CommandExecutionStatus @default(PENDING)
+  errorMessage  String?
+  createdAt     DateTime               @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  @@index([status])
+  @@index([correlationId])
+}
