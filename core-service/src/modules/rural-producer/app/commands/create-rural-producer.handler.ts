@@ -34,8 +34,11 @@ export class CreateRuralProducerCommandHandler
     await this.processRepository.update(execution);
 
     try {
+      // Gera o ID internamente
+      const producerId = randomUUID();
+
       const producer = new RuralProducer(
-        command.id,
+        producerId,
         command.taxId,
         command.taxIdType,
         command.name,

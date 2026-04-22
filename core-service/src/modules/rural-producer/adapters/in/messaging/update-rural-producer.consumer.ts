@@ -3,6 +3,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AsyncApiSub } from 'nestjs-asyncapi';
 import { UpdateRuralProducerCommand } from '../../../app/commands/interfaces/update-rural-producer.command';
+import type { CommandExecutionResult } from '../../../app/commands/create-rural-producer.handler';
 import { UpdateRuralProducerPayloadDto } from './dtos';
 
 @Controller()
@@ -18,7 +19,7 @@ export class UpdateRuralProducerConsumer {
     },
   })
   @MessagePattern('rural-producer.update')
-  execute(@Payload() payload: UpdateRuralProducerPayloadDto): Promise<void> {
+  execute(@Payload() payload: UpdateRuralProducerPayloadDto): Promise<CommandExecutionResult> {
     return this.commandBus.execute(
       new UpdateRuralProducerCommand(payload.id, payload.name),
     );

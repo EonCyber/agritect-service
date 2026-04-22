@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { MessagingModule } from '../../shared/messaging.module';
 import { PrismaService } from '../../shared/prisma.service';
 import { PrismaRuralProducerRepository } from './infra/persistence/prisma-rural-producer.repository';
 import { PrismaCropRepository } from './infra/persistence/prisma-crop.repository';
@@ -10,6 +11,8 @@ import { RuralProducerReadAdapter } from './adapters/out/rural-producer-read.ada
 import { CropRepositoryAdapter } from './adapters/out/crop-repository.adapter';
 import { HarvestSeasonRepositoryAdapter } from './adapters/out/harvest-season-repository.adapter';
 import { DashboardReadAdapter, DASHBOARD_READ } from './adapters/out/dashboard-read.adapter';
+import { CropReadAdapter } from './adapters/out/crop-read.adapter';
+import { HarvestSeasonReadAdapter } from './adapters/out/harvest-season-read.adapter';
 import {
   CreateRuralProducerCommandHandler,
   RURAL_PRODUCER_REPOSITORY,
@@ -31,6 +34,14 @@ import {
   GetProcessStatusQueryHandler,
   PROCESS_REPOSITORY,
 } from './app/queries/get-process-status.handler';
+import {
+  ListCropsQueryHandler,
+  CROP_READ,
+} from './app/queries/list-crops.handler';
+import {
+  ListHarvestSeasonsQueryHandler,
+  HARVEST_SEASON_READ,
+} from './app/queries/list-harvest-seasons.handler';
 import { PrismaCommandExecutionRepository } from './infra/persistence/prisma-command-execution.repository';
 import { ProcessRepositoryAdapter } from './adapters/out/process-repository.adapter';
 import { CreateRuralProducerConsumer } from './adapters/in/messaging/create-rural-producer.consumer';
@@ -45,6 +56,8 @@ import { GetFarmsByStateConsumer } from './adapters/in/messaging/get-farms-by-st
 import { GetCropsDistributionConsumer } from './adapters/in/messaging/get-crops-distribution.consumer';
 import { GetLandUseConsumer } from './adapters/in/messaging/get-land-use.consumer';
 import { GetProcessStatusConsumer } from './adapters/in/messaging/get-process-status.consumer';
+import { ListCropsConsumer } from './adapters/in/messaging/list-crops.consumer';
+import { ListHarvestSeasonsConsumer } from './adapters/in/messaging/list-harvest-seasons.consumer';
 import { HealthController } from './adapters/in/rest/health.controller';
 
 const commandHandlers = [
@@ -63,6 +76,8 @@ const queryHandlers = [
   GetCropsDistributionQueryHandler,
   GetLandUseQueryHandler,
   GetProcessStatusQueryHandler,
+  ListCropsQueryHandler,
+  ListHarvestSeasonsQueryHandler,
 ];
 
 const commandConsumers = [
@@ -81,11 +96,17 @@ const queryConsumers = [
   GetCropsDistributionConsumer,
   GetLandUseConsumer,
   GetProcessStatusConsumer,
+  ListCropsConsumer,
+  ListHarvestSeasonsConsumer,
 ];
 
 @Module({
-  imports: [CqrsModule],
-  controllers: [HealthController],
+  imports: [CqrsModule, MessagingModule],
+  controllers: [
+    HealthController,
+    ...commandConsumers,
+    ...queryConsumers,
+  ],
   providers: [
     PrismaService,
     PrismaRuralProducerRepository,
@@ -101,12 +122,14 @@ const queryConsumers = [
     HarvestSeasonRepositoryAdapter,
     DashboardReadAdapter,
     { provide: DASHBOARD_READ, useExisting: DashboardReadAdapter },
+    CropReadAdapter,
+    { provide: CROP_READ, useExisting: CropReadAdapter },
+    HarvestSeasonReadAdapter,
+    { provide: HARVEST_SEASON_READ, useExisting: HarvestSeasonReadAdapter },
     ProcessRepositoryAdapter,
     { provide: PROCESS_REPOSITORY, useExisting: ProcessRepositoryAdapter },
     ...commandHandlers,
     ...queryHandlers,
-    ...commandConsumers,
-    ...queryConsumers,
   ],
 })
 export class RuralProducerModule {}

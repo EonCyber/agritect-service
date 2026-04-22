@@ -70,6 +70,17 @@ model Planting {
   @@index([cropId, harvestSeasonId])
 }
 
+model User {
+  id           String   @id @default(cuid())
+  username     String
+  email        String   @unique
+  passwordHash String
+  active       Boolean  @default(true)
+  roles        String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model CommandExecution {
   id            String                 @id @default(cuid())
   commandName   String

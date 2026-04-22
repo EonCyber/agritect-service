@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
@@ -5,6 +6,18 @@ import { natsConfig } from './infra/config/nats.config';
 import { AsyncApiDocumentBuilder, AsyncApiModule } from 'nestjs-asyncapi';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import jsyaml from 'js-yaml';
+import { Logger } from '@nestjs/common';
+
+const logger = new Logger('Bootstrap');
+
+// Handlers para prevenir crash da aplicação
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+});
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -35,8 +48,12 @@ async function bootstrap() {
   httpAdapter.get('/asyncapi-json', (_req: unknown, res: any) => { res.type('application/json'); res.send(jsonDoc); });
   httpAdapter.get('/asyncapi-yaml', (_req: unknown, res: any) => { res.type('text/yaml'); res.send(yamlDoc); });
 
-  app.connectMicroservice(natsConfig);
+  app.connectMicroservice(natsConfig, { inheritAppConfig: true });
   await app.startAllMicroservices();
   await app.listen(process.env.PORT ?? 3005);
 }
-bootstrap();
+
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});

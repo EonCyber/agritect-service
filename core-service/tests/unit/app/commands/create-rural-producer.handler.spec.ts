@@ -37,11 +37,10 @@ describe('CreateRuralProducerCommandHandler', () => {
     handler = module.get(CreateRuralProducerCommandHandler);
   });
 
-  it('should save a new RuralProducer', async () => {
+  it('should save a new RuralProducer with generated ID', async () => {
     mockRepository.save.mockResolvedValue(undefined);
 
     const command = new CreateRuralProducerCommand(
-      'uuid-1',
       '12345678901',
       TaxIdType.PF,
       'João da Silva',
@@ -52,7 +51,8 @@ describe('CreateRuralProducerCommandHandler', () => {
     expect(mockRepository.save).toHaveBeenCalledTimes(1);
     const saved: RuralProducer = mockRepository.save.mock.calls[0][0];
     expect(saved).toBeInstanceOf(RuralProducer);
-    expect(saved.id).toBe('uuid-1');
+    expect(saved.id).toBeDefined();
+    expect(saved.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(saved.taxIdType).toBe(TaxIdType.PF);
     expect(saved.name).toBe('João da Silva');
     expect(result.processId).toBeDefined();
@@ -61,7 +61,6 @@ describe('CreateRuralProducerCommandHandler', () => {
 
   it('should throw InvalidTaxIdError when taxId has wrong length', async () => {
     const command = new CreateRuralProducerCommand(
-      'uuid-2',
       '123',
       TaxIdType.PF,
       'João da Silva',
@@ -73,7 +72,6 @@ describe('CreateRuralProducerCommandHandler', () => {
 
   it('should throw on invalid name (too short)', async () => {
     const command = new CreateRuralProducerCommand(
-      'uuid-3',
       '12345678901',
       TaxIdType.PF,
       'Jo',
@@ -87,7 +85,6 @@ describe('CreateRuralProducerCommandHandler', () => {
     mockRepository.save.mockRejectedValue(new Error('DB error'));
 
     const command = new CreateRuralProducerCommand(
-      'uuid-4',
       '12345678901',
       TaxIdType.PF,
       'João da Silva',

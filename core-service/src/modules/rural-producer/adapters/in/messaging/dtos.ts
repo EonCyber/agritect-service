@@ -2,9 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { TaxIdType } from '../../../domain/entities/rural-producer';
 
 export class CreateRuralProducerPayloadDto {
-  @ApiProperty({ description: 'UUID do produtor rural' })
-  id!: string;
-
   @ApiProperty({ description: 'CPF (11 dígitos) ou CNPJ (14 dígitos) sem formatação' })
   taxId!: string;
 

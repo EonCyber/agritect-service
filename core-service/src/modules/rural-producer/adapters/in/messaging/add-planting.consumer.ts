@@ -3,6 +3,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AsyncApiSub } from 'nestjs-asyncapi';
 import { AddPlantingCommand } from '../../../app/commands/interfaces/add-planting.command';
+import type { CommandExecutionResult } from '../../../app/commands/create-rural-producer.handler';
 import { AddPlantingPayloadDto } from './dtos';
 
 @Controller()
@@ -18,7 +19,7 @@ export class AddPlantingConsumer {
     },
   })
   @MessagePattern('rural-producer.planting.add')
-  execute(@Payload() payload: AddPlantingPayloadDto): Promise<void> {
+  execute(@Payload() payload: AddPlantingPayloadDto): Promise<CommandExecutionResult> {
     return this.commandBus.execute(
       new AddPlantingCommand(
         payload.ruralProducerId,
